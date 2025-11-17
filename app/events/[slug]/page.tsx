@@ -1,7 +1,11 @@
 import Image from "next/image";
 import { notFound } from "next/navigation";
 
+import { IEvent } from "@/database";
+import { getSimilarEventsBySlug } from "@/lib/actions/event.actions";
+
 import BookEvent from "@/components/BookEvent";
+import EventCard from "@/components/EventCard";
 
 const BASE_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
@@ -50,6 +54,7 @@ const EventDetails = async ({
   const request = await fetch(`${BASE_URL}/api/events/${slug}`);
   const {
     event: {
+      title,
       description,
       image,
       overview,
@@ -68,10 +73,12 @@ const EventDetails = async ({
 
   const bookings = 10;
 
+  const similarEvents: IEvent[] = await getSimilarEventsBySlug(slug);
+
   return (
     <section id="event">
       <div className="header">
-        <h1>Event Description</h1>
+        <h1>{title}</h1>
         <p>{description}</p>
       </div>
 
@@ -112,14 +119,14 @@ const EventDetails = async ({
             />
           </section>
 
-          <EventAgenda agendaItems={JSON.parse(agenda[0])} />
+          <EventAgenda agendaItems={agenda} />
 
           <section className="flex-col-gap-2">
             <h2>About The Organizer</h2>
             <p>{organizer}</p>
           </section>
 
-          <EventTags tags={JSON.parse(tags[0])} />
+          <EventTags tags={tags} />
         </div>
 
         {/* right side -> booking */}
@@ -137,6 +144,16 @@ const EventDetails = async ({
             <BookEvent />
           </div>
         </aside>
+      </div>
+
+      <div className="fles w-full flex-col gap-4 pt-20">
+        <h2>Similar Events</h2>
+        <div className="events">
+          {similarEvents.length > 0 &&
+            similarEvents.map((similarEvent: IEvent) => (
+              <EventCard key={similarEvent.slug} {...similarEvent} />
+            ))}
+        </div>
       </div>
     </section>
   );
